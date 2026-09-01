@@ -1,28 +1,22 @@
-BASE_URL = "https://livebetterwithbetty.com/"
-PRODUCT_URL = "https://livebetterwithbetty.com/shop/"
+"""Entry point for the e-commerce product scraper."""
 
-SCRAPING_BOT_NAME = "E-commerce Scraper"
+import os
 
-import requests
-from bs4 import BeautifulSoup
+from scraper import create_driver, save_results, scrape_all_products
 
-def get_product_data(product_url):
-    response = requests.get(product_url)
-    soup = BeautifulSoup(response.text, 'html.parser')
-    return soup
 
-def get_product_list(product_url):
-    response = requests.get(product_url)
-    soup = BeautifulSoup(response.text, 'html.parser')
-    return soup 
+def main() -> None:
+    scraper_dir = os.path.dirname(os.path.abspath(__file__))
+    driver = create_driver()
 
-def get_product_data(product_url):
-    response = requests.get(product_url)
-    soup = BeautifulSoup(response.text, 'html.parser')
-    return soup 
+    try:
+        products = scrape_all_products(driver)
+        json_path = save_results(products, scraper_dir)
+        print(f"\nDone — scraped {len(products)} products")
+        print(f"  JSON: {json_path}")
+    finally:
+        driver.quit()
 
 
 if __name__ == "__main__":
-    product_url = PRODUCT_URL
-    product_list = get_product_list(product_url)
-    print(product_list)
+    main()
