@@ -1,9 +1,13 @@
 """Scraper settings — adjust selectors and URLs here."""
 
+import os
+from dotenv import load_dotenv
+
+load_dotenv()
 SCRAPING_BOT_NAME = "E-commerce Scraper"
 
-BASE_URL = "https://livebetterwithbetty.com/"
-SHOP_URL = "https://livebetterwithbetty.com/shop/"
+BASE_URL = os.getenv("ECOMMERCE_SCRAPER_URL")
+SHOP_URL = f"{BASE_URL}/shop/"
 
 # Seconds to wait after navigation (increase if pages load slowly)
 PAGE_LOAD_DELAY = 2
@@ -25,7 +29,7 @@ SELECTORS = {
     "product_prices_all": ".woocommerce-Price-amount",
     "product_description": "#tab-description, .woocommerce-Tabs-panel--description",
     "product_category": ".posted_in a",
-    "product_image": ".woocommerce-product-gallery img, .wp-post-image",
+    "product_image": ".woocommerce-product-gallery__image img.wp-post-image, .woocommerce-product-gallery__image img:not(.emoji):not(.zoomImg)",
     "product_breadcrumb": ".woocommerce-breadcrumb",
     "product_sku": ".sku",
     "product_stock": "p.stock",

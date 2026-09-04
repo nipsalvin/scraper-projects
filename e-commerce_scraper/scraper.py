@@ -36,7 +36,6 @@ def create_driver() -> webdriver.Chrome:
         service=ChromeService(ChromeDriverManager().install()),
         options=options,
     )
-    import ipdb; ipdb.set_trace()
     driver.maximize_window()
     return driver
 
@@ -337,6 +336,27 @@ def extract_product_variants(driver: webdriver.Chrome, soup: BeautifulSoup) -> l
     return [build_simple_variant(soup)]
 
 
+def extract_product_image_url(soup: BeautifulSoup) -> str | None:
+    """
+    Prefer the full-size gallery image over thumbnails/emoji/zoom overlays.
+    WooCommerce order of preference: data-large_image -> data-src -> gallery link -> src.
+    """
+    image_element = soup.select_one(SELECTORS["product_image"])
+    if image_element:
+        for attr in ("data-large_image", "data-src", "src"):
+            url = image_element.get(attr)
+            if url and "emoji" not in url and not url.endswith(".svg"):
+                return url.split("?")[0]
+
+    gallery_link = soup.select_one(".woocommerce-product-gallery__image > a[href]")
+    if gallery_link:
+        href = gallery_link.get("href", "")
+        if href and href != "#" and "emoji" not in href:
+            return href.split("?")[0]
+
+    return None
+
+
 def scrape_product_page(driver: webdriver.Chrome, product_url: str) -> dict[str, Any]:
     """Open a single product page and extract fields."""
     driver.get(product_url)
@@ -350,8 +370,7 @@ def scrape_product_page(driver: webdriver.Chrome, product_url: str) -> dict[str,
         for element in soup.select(SELECTORS["product_category"])
     ]
 
-    image_element = soup.select_one(SELECTORS["product_image"])
-    image_url = image_element.get("src") if image_element else None
+    image_url = extract_product_image_url(soup)
 
     variants = extract_product_variants(driver, soup)
     option_groups = parse_variant_option_groups(soup)
@@ -374,7 +393,9 @@ def scrape_product_page(driver: webdriver.Chrome, product_url: str) -> dict[str,
         "variants": variants,
         "variant_option_groups": option_groups,
     }
-
+    # print product
+    for i in product:
+        print(i, product[i])
     return product
 
 
